@@ -139,35 +139,43 @@ MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec
 def fetch_rss(url: str, source_name: str, max_items: int = 4) -> list[dict]:
     try:
         req = urllib.request.Request(url, headers={
-            "User-Agent": "Mozilla/5.0 (compatible; StockRSSBot/1.0)"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
         })
         with urllib.request.urlopen(req, timeout=10) as resp:
-            content = resp.read()
+            raw = resp.read().decode("utf-8", errors="ignore")
 
-        root  = ET.fromstring(content)
-        ns    = {"atom": "http://www.w3.org/2005/Atom"}
-        items = root.findall(".//item") or root.findall(".//atom:entry", ns)
+        # Strip namespaces so findall works simply
+        raw = re.sub(r' xmlns[^=]*="[^"]*"', '', raw)
+        root = ET.fromstring(raw.encode("utf-8"))
+
+        # Try RSS items first, then Atom entries
+        items = root.findall(".//item") or root.findall(".//entry")
 
         results = []
         for item in items[:max_items]:
-            title_el = item.find("title") or item.find("atom:title", ns)
-            link_el  = item.find("link")  or item.find("atom:link",  ns)
-            date_el  = item.find("pubDate") or item.find("atom:published", ns)
+            # --- title ---
+            title_el = item.find("title")
+            title = (title_el.text or "") if title_el is not None else ""
+            title = re.sub(r"<!\[CDATA\[(.+?)\]\]>", r"\1", title, flags=re.DOTALL)
+            title = re.sub(r"<[^>]+>", "", title).strip()
 
-            title = (title_el.text or "").strip() if title_el is not None else ""
-            link  = (link_el.text  or link_el.get("href", "") or "").strip() if link_el is not None else ""
-            pub   = (date_el.text  or "").strip() if date_el is not None else ""
+            # --- link ---
+            link = ""
+            link_el = item.find("link")
+            if link_el is not None:
+                link = (link_el.text or link_el.get("href", "") or "").strip()
 
-            # Format date nicely
-            try:
-                parsed = parsedate(pub)
-                pub = f"{parsed[2]:02d} {MONTHS[parsed[1]-1]}" if parsed else ""
-            except Exception:
-                pub = ""
-
-            # Clean CDATA / HTML tags
-            title = re.sub(r'<!\[CDATA\[(.*?)\]\]>', r'\1', title)
-            title = re.sub(r'<[^>]+>', '', title).strip()
+            # --- date ---
+            pub = ""
+            for tag in ["pubDate", "published", "updated"]:
+                d = item.find(tag)
+                if d is not None and d.text:
+                    try:
+                        p = parsedate(d.text.strip())
+                        pub = f"{p[2]:02d} {MONTHS[p[1]-1]}" if p else ""
+                    except Exception:
+                        pass
+                    break
 
             if len(title) > 30:
                 results.append({"text": title, "link": link, "date": pub, "source": source_name})
