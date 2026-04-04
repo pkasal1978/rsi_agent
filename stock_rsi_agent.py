@@ -126,10 +126,11 @@ def fetch_ticker_data(ticker: str) -> dict:
 # ──────────────────────────────────────────────
 
 RSS_SOURCES = [
-    {"name": "Reuters",       "url": "https://feeds.reuters.com/reuters/businessNews"},
-    {"name": "CNBC",          "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html"},
-    {"name": "MarketWatch",   "url": "https://feeds.content.dowjones.io/public/rss/mw_marketpulse"},
-    {"name": "Yahoo Finance", "url": "https://finance.yahoo.com/news/rssindex"},
+    # Google News RSS — reliable, never blocked, always fresh
+    {"name": "Stock Market",    "url": "https://news.google.com/rss/search?q=stock+market&hl=en-US&gl=US&ceid=US:en"},
+    {"name": "S&P 500",         "url": "https://news.google.com/rss/search?q=S%26P500&hl=en-US&gl=US&ceid=US:en"},
+    {"name": "Federal Reserve", "url": "https://news.google.com/rss/search?q=federal+reserve+rates&hl=en-US&gl=US&ceid=US:en"},
+    {"name": "Nasdaq",          "url": "https://news.google.com/rss/search?q=nasdaq&hl=en-US&gl=US&ceid=US:en"},
 ]
 
 MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
@@ -300,7 +301,7 @@ def build_highlights_section(headlines: list[dict]) -> str:
                    text-transform:uppercase;letter-spacing:0.06em;">Market Highlights</h2>
       </div>
       <p style="margin:0 0 8px;font-size:11px;color:#9ca3af;">
-        Sources: Reuters · CNBC · MarketWatch · Yahoo Finance
+        Sources: Google News (Stock Market · S&amp;P 500 · Federal Reserve · Nasdaq)
       </p>
       {items}
     </div>"""
