@@ -1,6 +1,6 @@
 # Add one email per line. Lines starting with # are ignored.
 
 youpras401@gmail.com
-Teju.nagendra11@gmail.com
-nbhushankc@gmail.com
+#Teju.nagendra11@gmail.com
+#nbhushankc@gmail.com
 # someone@example.com   ← uncomment to enable
